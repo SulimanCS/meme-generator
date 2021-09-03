@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from quote import QuoteModel
 import docx
+import os.path
 
 class IngestorInterface(ABC):
     """A general interface for an ingestor."""
@@ -25,7 +26,7 @@ class IngestorInterface(ABC):
         :return: Whether if the file can by ingested or not by the passed in isntance.
         """
         file_type = path.split(".")[-1]
-        return cls.ingestor_type == file_type
+        return os.path.isfile(path) and cls.ingestor_type == file_type
 
     @abstractmethod
     def parse(cls, path: str) -> list:
