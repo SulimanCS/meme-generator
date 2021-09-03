@@ -3,6 +3,7 @@ from quote import QuoteModel
 import subprocess
 import docx
 import os.path
+import pandas as pd
 
 class IngestorInterface(ABC):
     """A general interface for an ingestor."""
@@ -129,6 +130,33 @@ class PDFIngestor(IngestorInterface):
             return quote_models
         return []
 
+class CSVIngestor(IngestorInterface):
+    """A csv file type ingestor.
+
+    csv ingestor implements a parser to extract quotes from .csv files
+    """
+
+    ingestor_type = "csv"
+
+    def parse(self, path: str) -> list[QuoteModel]:
+        """Parse a pdf file to get a list of quote models.
+
+        :param path: a path for the file to be ingested.
+        :return: a list of `quotemodels`.
+        """
+        quote_models = []
+        if self.can_ingest(path):
+            try:
+                df = pd.read_csv(path)
+                for row in df.itertuples():
+                    print(f'body: {row.body}, author: {row.author}')
+                    quote_models.append(QuoteModel(row.body, row.author))
+            except FileNotFoundError as e:
+                print(e)
+                return []
+            return quote_models
+        return []
+
 if __name__ == "__main__":
     # import os
     # print('\n\n')
@@ -152,4 +180,11 @@ if __name__ == "__main__":
     quote_models = test.parse("_data/DogQuotes/DogQuotesPDFho.pdf")
     quote_models = test.parse("_data/DogQuotes/DogQuotesDOCX.docx")
     quote_models = test.parse("_data/DogQuotes/DogQuotesPDF.pdf")
+    print(quote_models)
+
+    # manual testing for CSVIngestor
+    test = CSVIngestor()
+    quote_models = test.parse("_data/DogQuotes/DogQuotesPDFho.pdf")
+    quote_models = test.parse("_data/DogQuotes/DogQuotesDOCX.docx")
+    quote_models = test.parse("_data/DogQuotes/DogQuotesCSV.csv")
     print(quote_models)
