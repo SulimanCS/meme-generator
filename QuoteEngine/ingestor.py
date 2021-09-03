@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from quote import QuoteModel
+import docx
 
 # TODO: docstring, pep8 pep 257
 # TODO: __str__
@@ -52,9 +53,7 @@ class TextIngestor(IngestorInterface):
                         quote = line.split("-")
                         body = quote[0].strip()
                         author = quote[1].strip()
-                        quote_model = QuoteModel(body, author)
-                        quote_models.append(quote_model)
-
+                        quote_models.append(QuoteModel(body, author))
             except FileNotFoundError as e:
                 print(e)
                 return []
@@ -62,10 +61,55 @@ class TextIngestor(IngestorInterface):
         print(f"{self.__class__.__name__} object can't ingest {path}")
         return []
 
+class DocxIngestor(IngestorInterface):
+    """A docx file type ingestor.
+
+    Docx ingestor implements a parser to extract quotes from .docx files
+    """
+
+    ingestor_type = "docx"
+
+    def parse(self, path: str) -> list[QuoteModel]:
+        """Parse a file to get a list of quote models.
+
+        :param path: a path for the file to be ingested.
+        :return: a list of `quotemodels`.
+        """
+        quote_models = []
+        if self.can_ingest(path):
+            try:
+                doc = docx.Document(path)
+                for line in doc.paragraphs:
+                    if len(line.text) == 0:
+                        continue
+                    quote = line.text.split("-")
+                    # TODO: might be better to keep quotes, since
+                    # it may be intended
+                    # TODO: extract quote_model logic
+                    body = quote[0].strip().strip('"')
+                    author = quote[1].strip()
+                    quote_models.append(QuoteModel(body, author))
+            except docx.opc.exceptions.PackageNotFoundError as e:
+                print(e)
+                return []
+            return quote_models
+        print(f"{self.__class__.__name__} object can't ingest {path}")
+        return []
 
 if __name__ == "__main__":
+    # import os
+    # print('\n\n')
+    # print(os.getcwd())
+    # manual testing for TextIngestor
     test = TextIngestor()
-    print(test.can_ingest("grger.txt"))
-    print(test.can_ingest("_data/DogQuotesTXT.few"))
+    print(test.can_ingest("grger.blah"))
+    print(test.can_ingest("_data/DogQuotes/DogQuotesTXT.txt"))
     quote_models = test.parse("_data/DogQuotes/DogQuotesTXT.txt")
-    pass
+    print(quote_models)
+
+    # manual testing for DocxIngestor
+    test = DocxIngestor()
+    print(test.can_ingest("grger.blah"))
+    print(test.can_ingest("_data/DogQuotes/DogQuotesDOCX.docx"))
+    quote_models = test.parse("_data/DogQuotes/DogQuotesDOCX.docx")
+    print(quote_models)
