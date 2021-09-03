@@ -1,6 +1,16 @@
-"""Represent different ingestors for different file types"""
+"""Represent different ingestors for different file types."""
 from abc import ABC, abstractmethod
-from quote import QuoteModel
+
+# for some reason from quote import QuoteModel does not work
+# in meme.py, this is why the conditional is needed
+# and `from QuoteEngine.quote import QuoteModel` does not work
+# when executing this file alone.
+# any help with understanding why is this the case would be
+# appreciated
+if __name__ == "__main__":
+    from quote import QuoteModel
+else:
+    from QuoteEngine.quote import QuoteModel
 import pandas as pd
 import subprocess
 import docx
@@ -177,15 +187,17 @@ class Ingestor(IngestorInterface):
         initializes a single instance of all different kind of ingestors
         and saves them into an ingestors list
         """
-        self.ingestors = [TextIngestor(), DocxIngestor(), PDFIngestor(), CSVIngestor()]
+        pass
 
-    def parse(self, path: str) -> list[QuoteModel]:
+    @staticmethod
+    def parse(path: str) -> list[QuoteModel]:
         """Parse a pdf file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
         :return: a list of `quotemodels`.
         """
-        for ingestor in self.ingestors:
+        ingestors = [TextIngestor(), DocxIngestor(), PDFIngestor(), CSVIngestor()]
+        for ingestor in ingestors:
             if ingestor.can_ingest(path):
                 return ingestor.parse(path)
         return []
