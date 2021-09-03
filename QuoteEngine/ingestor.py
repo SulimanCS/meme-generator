@@ -2,11 +2,20 @@ from abc import ABC, abstractmethod
 from quote import QuoteModel
 import docx
 
-# TODO: docstring, pep8 pep 257
-# TODO: __str__
-# TODO: __repr__
 class IngestorInterface(ABC):
     """A general interface for an ingestor."""
+
+    @staticmethod
+    def ingest_line(line) -> QuoteModel:
+        """Make a QuoteModel out of a line in an external file.
+
+        :param line: A line from an external file.
+        :return: QuoteModel object.
+        """
+        quote = line.split("-")
+        body = quote[0].strip()
+        author = quote[1].strip()
+        return QuoteModel(body, author)
 
     @classmethod
     def can_ingest(cls, path: str) -> bool:
@@ -50,10 +59,7 @@ class TextIngestor(IngestorInterface):
                 with open(path, "r", encoding="utf-8-sig") as f:
                     lines = f.readlines()
                     for line in lines:
-                        quote = line.split("-")
-                        body = quote[0].strip()
-                        author = quote[1].strip()
-                        quote_models.append(QuoteModel(body, author))
+                        quote_models.append(self.ingest_line(line))
             except FileNotFoundError as e:
                 print(e)
                 return []
@@ -82,13 +88,7 @@ class DocxIngestor(IngestorInterface):
                 for line in doc.paragraphs:
                     if len(line.text) == 0:
                         continue
-                    quote = line.text.split("-")
-                    # TODO: might be better to keep quotes, since
-                    # it may be intended
-                    # TODO: extract quote_model logic
-                    body = quote[0].strip().strip('"')
-                    author = quote[1].strip()
-                    quote_models.append(QuoteModel(body, author))
+                    quote_models.append(self.ingest_line(line.text))
             except docx.opc.exceptions.PackageNotFoundError as e:
                 print(e)
                 return []
