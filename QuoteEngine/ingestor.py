@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from quote import QuoteModel
+import subprocess
 import docx
 import os.path
 
@@ -30,7 +31,7 @@ class IngestorInterface(ABC):
 
     @abstractmethod
     def parse(cls, path: str) -> list:
-        """Parse a file to get a list of quote models.
+        """Parse a txt file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
         :return: a list of `quotemodels`.
@@ -77,7 +78,7 @@ class DocxIngestor(IngestorInterface):
     ingestor_type = "docx"
 
     def parse(self, path: str) -> list[QuoteModel]:
-        """Parse a file to get a list of quote models.
+        """Parse a docx file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
         :return: a list of `quotemodels`.
@@ -97,6 +98,37 @@ class DocxIngestor(IngestorInterface):
         print(f"{self.__class__.__name__} object can't ingest {path}")
         return []
 
+class PDFIngestor(IngestorInterface):
+    """A pdf file type ingestor.
+
+    Pdf ingestor implements a parser to extract quotes from .pdf files
+    """
+
+    ingestor_type = "pdf"
+
+    def parse(self, path: str) -> list[QuoteModel]:
+        """Parse a pdf file to get a list of quote models.
+
+        :param path: a path for the file to be ingested.
+        :return: a list of `quotemodels`.
+        """
+        quote_models = []
+        if self.can_ingest(path):
+            try:
+                # the '-' flag outputs the text of a pdf file
+                # to stdout, this way I don't have to handle removing
+                # temp files since none were created
+                p = subprocess.run(['./pdftotext.exe', '-layout', path, '-'], stdout=subprocess.PIPE)
+                output = p.stdout.decode('utf-8')
+                output_lines = output.split('\n')[:-1]
+                for line in output_lines:
+                    quote_models.append(self.ingest_line(line))
+            except FileNotFoundError as e:
+                print(e)
+                return []
+            return quote_models
+        return []
+
 if __name__ == "__main__":
     # import os
     # print('\n\n')
@@ -113,4 +145,11 @@ if __name__ == "__main__":
     print(test.can_ingest("grger.blah"))
     print(test.can_ingest("_data/DogQuotes/DogQuotesDOCX.docx"))
     quote_models = test.parse("_data/DogQuotes/DogQuotesDOCX.docx")
+    print(quote_models)
+
+    # manual testing for PDFIngestor
+    test = PDFIngestor()
+    quote_models = test.parse("_data/DogQuotes/DogQuotesPDFho.pdf")
+    quote_models = test.parse("_data/DogQuotes/DogQuotesDOCX.docx")
+    quote_models = test.parse("_data/DogQuotes/DogQuotesPDF.pdf")
     print(quote_models)
