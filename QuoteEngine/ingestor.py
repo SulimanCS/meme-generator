@@ -1,9 +1,11 @@
+"""Represent different ingestors for different file types"""
 from abc import ABC, abstractmethod
 from quote import QuoteModel
+import pandas as pd
 import subprocess
 import docx
 import os.path
-import pandas as pd
+
 
 class IngestorInterface(ABC):
     """A general interface for an ingestor."""
@@ -70,6 +72,7 @@ class TextIngestor(IngestorInterface):
         print(f"{self.__class__.__name__} object can't ingest {path}")
         return []
 
+
 class DocxIngestor(IngestorInterface):
     """A docx file type ingestor.
 
@@ -99,6 +102,7 @@ class DocxIngestor(IngestorInterface):
         print(f"{self.__class__.__name__} object can't ingest {path}")
         return []
 
+
 class PDFIngestor(IngestorInterface):
     """A pdf file type ingestor.
 
@@ -119,9 +123,11 @@ class PDFIngestor(IngestorInterface):
                 # the '-' flag outputs the text of a pdf file
                 # to stdout, this way I don't have to handle removing
                 # temp files since none were created
-                p = subprocess.run(['./pdftotext.exe', '-layout', path, '-'], stdout=subprocess.PIPE)
-                output = p.stdout.decode('utf-8')
-                output_lines = output.split('\n')[:-1]
+                p = subprocess.run(
+                    ["./pdftotext.exe", "-layout", path, "-"], stdout=subprocess.PIPE
+                )
+                output = p.stdout.decode("utf-8")
+                output_lines = output.split("\n")[:-1]
                 for line in output_lines:
                     quote_models.append(self.ingest_line(line))
             except FileNotFoundError as e:
@@ -129,6 +135,7 @@ class PDFIngestor(IngestorInterface):
                 return []
             return quote_models
         return []
+
 
 class CSVIngestor(IngestorInterface):
     """A csv file type ingestor.
@@ -149,13 +156,40 @@ class CSVIngestor(IngestorInterface):
             try:
                 df = pd.read_csv(path)
                 for row in df.itertuples():
-                    print(f'body: {row.body}, author: {row.author}')
                     quote_models.append(QuoteModel(row.body, row.author))
             except FileNotFoundError as e:
                 print(e)
                 return []
             return quote_models
         return []
+
+
+class Ingestor(IngestorInterface):
+    """A general ingestor.
+
+    ingestor encapsulates all kinds of ingestors and selects the
+    appropriate one based on the file type
+    """
+
+    def __init__(self):
+        """Create a new `Ingestor`.
+
+        initializes a single instance of all different kind of ingestors
+        and saves them into an ingestors list
+        """
+        self.ingestors = [TextIngestor(), DocxIngestor(), PDFIngestor(), CSVIngestor()]
+
+    def parse(self, path: str) -> list[QuoteModel]:
+        """Parse a pdf file to get a list of quote models.
+
+        :param path: a path for the file to be ingested.
+        :return: a list of `quotemodels`.
+        """
+        for ingestor in self.ingestors:
+            if ingestor.can_ingest(path):
+                return ingestor.parse(path)
+        return []
+
 
 if __name__ == "__main__":
     # import os
@@ -188,3 +222,16 @@ if __name__ == "__main__":
     quote_models = test.parse("_data/DogQuotes/DogQuotesDOCX.docx")
     quote_models = test.parse("_data/DogQuotes/DogQuotesCSV.csv")
     print(quote_models)
+
+    quote_files = [
+        "./_data/DogQuotes/DogQuotesTXT.txt",
+        "./_data/DogQuotes/DogQuotesDOCX.docx",
+        "./_data/DogQuotes/DogQuotesPDF.pdf",
+        "./_data/DogQuotes/DogQuotesCSV.csv",
+    ]
+    test = Ingestor()
+    all_quotes = []
+    for quote_file in quote_files:
+        all_quotes.extend(test.parse(quote_file))
+    print(all_quotes)
+    print(len(all_quotes))
