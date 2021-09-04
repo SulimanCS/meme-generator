@@ -3,7 +3,7 @@ import random
 import os
 import requests
 from flask import Flask, render_template, abort, request
-from QuoteEngine import Ingestor, QuoteModel
+from QuoteEngine import Ingestor
 from MemeEngine import MemeEngine
 
 
