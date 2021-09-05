@@ -38,8 +38,13 @@ class MemeEngine:
         width, height = image.size
         # taking 30% of width and height to hopefully avoid
         # the text running out of image border
-        random_location_width = random.randint(0, (width * 0.3))
-        random_location_height = random.randint(0, (height * 0.3))
+        try:
+            random_location_width = random.randint(0, (int(width * 0.3)))
+            random_location_height = random.randint(0, (int(height * 0.3)))
+        except Exception:
+            random_location_width = 0
+            random_location_height = 0
+
         random_location = (random_location_width, random_location_height)
         draw.text(random_location, f"{text}\n  - {author}", color, font=font)
         if show_image:
