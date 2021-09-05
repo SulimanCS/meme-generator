@@ -1,5 +1,6 @@
 """Represent different ingestors for different file types."""
 from abc import ABC, abstractmethod
+from typing import List
 
 # for some reason from quote import QuoteModel does not work
 # in meme.py, this is why the conditional is needed
@@ -43,7 +44,7 @@ class IngestorInterface(ABC):
         return os.path.isfile(path) and cls.ingestor_type == file_type
 
     @abstractmethod
-    def parse(cls, path: str) -> list:
+    def parse(cls, path: str) -> List:
         """Parse a txt file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
@@ -60,7 +61,7 @@ class TextIngestor(IngestorInterface):
 
     ingestor_type = "txt"
 
-    def parse(self, path: str) -> list[QuoteModel]:
+    def parse(self, path: str) -> List[QuoteModel]:
         """Parse a file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
@@ -91,7 +92,7 @@ class DocxIngestor(IngestorInterface):
 
     ingestor_type = "docx"
 
-    def parse(self, path: str) -> list[QuoteModel]:
+    def parse(self, path: str) -> List[QuoteModel]:
         """Parse a docx file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
@@ -121,7 +122,7 @@ class PDFIngestor(IngestorInterface):
 
     ingestor_type = "pdf"
 
-    def parse(self, path: str) -> list[QuoteModel]:
+    def parse(self, path: str) -> List[QuoteModel]:
         """Parse a pdf file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
@@ -155,7 +156,7 @@ class CSVIngestor(IngestorInterface):
 
     ingestor_type = "csv"
 
-    def parse(self, path: str) -> list[QuoteModel]:
+    def parse(self, path: str) -> List[QuoteModel]:
         """Parse a pdf file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
@@ -190,7 +191,7 @@ class Ingestor(IngestorInterface):
         pass
 
     @staticmethod
-    def parse(path: str) -> list[QuoteModel]:
+    def parse(path: str) -> List[QuoteModel]:
         """Parse a pdf file to get a list of quote models.
 
         :param path: a path for the file to be ingested.
