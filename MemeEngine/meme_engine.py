@@ -33,7 +33,10 @@ class MemeEngine:
         :param show_image: A switch to show the image if needed
         """
         draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype("arial.ttf", 30)
+        try:
+            font = ImageFont.truetype("arial.ttf", 30)
+        except OSError:
+            font = ImageFont.truetype("Chalkduster.ttf", 30)
         color = (0, 0, 0)
         width, height = image.size
         # taking 30% of width and height to hopefully avoid
