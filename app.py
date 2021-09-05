@@ -2,6 +2,7 @@
 import random
 import os
 import requests
+import traceback
 from flask import Flask, render_template, abort, request
 from QuoteEngine import Ingestor
 from MemeEngine import MemeEngine
@@ -82,7 +83,8 @@ def meme_post():
 
         path = meme.make_meme(tmp_file, body, author)
     except Exception as e:
-        print(f'Failed to make a meme from image url. [ERROR]: {str(e)}')
+        print('[ERROR] Failed to make a meme from image url.')
+        print(traceback.format_exc())
 
     if path is not None:
         os.remove(tmp_file)
